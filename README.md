@@ -10,6 +10,7 @@ Normalization logic for Joint Kit payloads.
 * [How to Use][section-how-to-use]
 * [API][section-api]
 * [For Developers][section-for-developers]
+* [License][section-license]
 
 
 ## Introduction
@@ -92,10 +93,17 @@ The plugin is automatically built on `npm publish`. But, you can manually build 
 $ npm run build-plugin
 ```
 
+
+## License
+
+[MIT](LICENSE)
+
+
 [section-introduction]: #introduction
 [section-how-to-use]: #how-to-use
 [section-api]: #api
 [section-for-developers]: #for-developers
+[section-license]: #license
 
 [link-eslint-site]: https://eslint.org
 [link-mocha-site]: https://mochajs.org
