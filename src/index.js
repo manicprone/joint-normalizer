@@ -296,7 +296,7 @@ export default class JointNormalizer {
     if (!modelName) return itemData;
 
     // Otherwise, hydrate data into Model object...
-    const ModelObject = this.Model(modelName);
+    const ModelObject = this.Model(modelName) || this.Model(stringUtils.toPascalCase(modelName));
     return new ModelObject({ ...itemData });
   } // END - buildModelForItem
 }
