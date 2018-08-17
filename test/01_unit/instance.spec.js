@@ -15,6 +15,8 @@ describe('INSTANCE', () => {
         debugToModel: false,
         payloadSpec: 'json-api',
         fieldForModelType: 'type',
+        fromFieldFormat: 'snake',
+        toFieldFormat: 'snake',
         models: null,
       });
       expect(defaultInstance.Model).to.be.a('function');
@@ -54,6 +56,8 @@ describe('INSTANCE', () => {
         debug: false,
         debugToModel: false,
         payloadSpec: 'json-api',
+        fromFieldFormat: 'snake',
+        toFieldFormat: 'snake',
         fieldForModelType: 'type',
         models: null,
       });

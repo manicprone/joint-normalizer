@@ -1,6 +1,7 @@
 # Joint Normalizer
 
-Normalization logic for Joint Kit payloads.
+Normalization logic for common HTTP response payloads.
+> Currently supports JSON API Spec only.
 
 <br />
 
@@ -37,9 +38,11 @@ $ npm install joint-normalizer --save
 | debugInit         | No        | Set to `true` to log debug messages during instantiation. Defaults to `false`. |
 | debugToModel      | No        | Set to `true` to log debug messages during Model object hydration. Defaults to `false`. |
 | debug             | No        | Set to `true` to log debug messages during instance utilization. Defaults to `false`. |
-| payloadSpec       | No        | The output specification of the Joint payload. Defaults to `json-api`. |
-| fieldForModelType | No        | The property name in the payload that identifies the name of the Model type. Defaults to `type`. |
-| models | No        | The Model object definitions (shapes) that the normalizer will build and return (if instructed). Provide the model definitions as an Object. |
+| payloadSpec       | No        | The output specification of the Joint payload. Defaults to `'json-api'`. |
+| fieldForModelType | No        | The property name in the payload that identifies the name of the Model type. Defaults to `'type'`. |
+| toFieldFormat     | No        | The target format (case) for normalized fields. Supported formats: `'snake'`, `'kebab'`, `'camel'`. Defaults to `'snake'`. |
+| fromFieldFormat   | No        | The source format (case) of the payload\'s fields. This declaration is not necessary for functional correctness, but will merely suppress unnecessary transformations (and loops) when the source and target match. Supported formats: `'snake'`, `'kebab'`, `'camel'`. Defaults to `'snake'`. |
+| models            | No        | The Model object definitions (shapes) that the normalizer will build and return (if instructed). Provide the model definitions as an Object. |
 
 ### Instance
 
@@ -79,18 +82,24 @@ $ npm run lint
 ### Dev Test
 
 The plugin uses [Mocha][link-mocha-site] for the testing framework,
-and [Chai][link-chai-site] and [Chai-HTTP][link-chai-http-site] for its assertions.
+and [Chai][link-chai-site] for its assertions.
 
 ``` sh
 $ npm run test
 ```
+
+To build the plugin before running the test, you can use:
+``` sh
+$ npm run build-test
+```
+
 
 ### Dev Build
 
 The plugin is automatically built on `npm publish`. But, you can manually build the plugin using:
 
 ``` sh
-$ npm run build-plugin
+$ npm run build
 ```
 
 
@@ -108,4 +117,3 @@ $ npm run build-plugin
 [link-eslint-site]: https://eslint.org
 [link-mocha-site]: https://mochajs.org
 [link-chai-site]: http://chaijs.com
-[link-chai-http-site]: http://chaijs.com/plugins/chai-http

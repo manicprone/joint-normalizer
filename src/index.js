@@ -1,27 +1,29 @@
 import objectUtils from './utils/object-utils';
+import stringUtils from './utils/string-utils';
 import Collection from './models/Collection';
-
-const logNamespace = '[joint-normalizer]';
 
 /* eslint-disable class-methods-use-this */
 export default class JointNormalizer {
   constructor(options) {
+    this.logNamespace = options.logNamespace || '[joint-normalizer]';
     this.debugInit = options.debugInit || false;
     this.debug = options.debug || false;
     this.debugToModel = options.debugToModel || false;
     this.payloadSpec = options.payloadSpec || 'json-api';
+    this.fromFieldFormat = options.fromFieldFormat || 'snake'; // 'snake' | 'kebab' | 'camel'
+    this.toFieldFormat = options.toFieldFormat || 'snake'; // 'snake' | 'kebab' | 'camel'
     this.fieldForModelType = options.fieldForModelType || 'type';
     this.models = options.models || null;
-    this.Model = buildModelFactory(this.models, this.debugInit);
+    this.Model = buildModelFactory(this.models, this.debugInit, this.logNamespace);
   }
 
   normalizePayload(payload, asModel = false) {
     let normalizedData = {};
 
     if (this.debug) {
-      console.log(`${logNamespace}`);
-      console.log(`${logNamespace} ==================================================== !!!`);
-      console.log(`${logNamespace} Joint payload to normalize:`, payload);
+      console.log(`${this.logNamespace}`);
+      console.log(`${this.logNamespace} ==================================================== !!!`);
+      console.log(`${this.logNamespace} Payload to normalize:`, payload);
     }
 
     if (payload.data) {
@@ -64,12 +66,12 @@ export default class JointNormalizer {
         normalizedData = this.normalizeItem(payload.data, relationData, asModel);
       }
     } else {
-      console.error(`${logNamespace} Error: The payload is not a valid package =>`, payload);
+      console.error(`${this.logNamespace} Error: The payload is not a valid package =>`, payload);
     }
 
     if (this.debug) {
-      console.log(`${logNamespace} NORMALIZED =======>`, normalizedData);
-      console.log(`${logNamespace} ==================================================== !!!`);
+      console.log(`${this.logNamespace} NORMALIZED =======>`, normalizedData);
+      console.log(`${this.logNamespace} ==================================================== !!!`);
     }
 
     return normalizedData;
@@ -79,7 +81,7 @@ export default class JointNormalizer {
     // Populate base item attributes...
     const item = this.normalizeBaseAttributes(itemData, asModel);
 
-    if (this.debug) console.log(`${logNamespace} Normalizing item data ==>`, itemData);
+    if (this.debug) console.log(`${this.logNamespace} Normalizing item data ==>`, itemData);
 
     // Populate relation data...
     if (itemData.relationships) {
@@ -90,7 +92,7 @@ export default class JointNormalizer {
       });
     }
 
-    if (this.debug) console.log(`${logNamespace} NORMALIZED ITEM ==>`, item);
+    if (this.debug) console.log(`${this.logNamespace} NORMALIZED ITEM ==>`, item);
 
     return item;
   } // END - normalizeItem
@@ -101,7 +103,32 @@ export default class JointNormalizer {
     // Handle base attributes...
     base[this.fieldForModelType] = itemData[this.fieldForModelType];
     base.id = itemData.id;
-    if (itemData.attributes) Object.assign(base, itemData.attributes);
+    if (itemData.attributes) {
+      // If from/to match, just copy over...
+      if (this.fromFieldFormat === this.toFieldFormat) {
+        Object.assign(base, objectUtils.cloneDeep(itemData.attributes));
+      // Otherwise, transform per config...
+      } else {
+        switch (this.toFieldFormat) {
+          case 'snake': {
+            const snaked = objectUtils.mapKeysDeep(itemData.attributes, (value, key) => stringUtils.toSnakeCase(key));
+            Object.assign(base, snaked);
+            break;
+          }
+          case 'kebab': {
+            const kebabed = objectUtils.mapKeysDeep(itemData.attributes, (value, key) => stringUtils.toKebabCase(key));
+            Object.assign(base, kebabed);
+            break;
+          }
+          case 'camel': {
+            const cameled = objectUtils.mapKeysDeep(itemData.attributes, (value, key) => stringUtils.toCamelCase(key));
+            Object.assign(base, cameled);
+            break;
+          }
+          default: Object.assign(base, objectUtils.cloneDeep(itemData.attributes));
+        } // end-switch
+      }
+    } // end-if (itemData.attributes)
 
     if (asModel) {
       return this.buildModelForItem(base);
@@ -153,6 +180,7 @@ export default class JointNormalizer {
     }
   } // END - normalizeRelationName
 
+  // TODO: Apply field transformations !!!
   normalizePaginationData(paginationData) {
     const info = {};
 
@@ -235,7 +263,7 @@ export default class JointNormalizer {
   buildRelationDataHash(relationData, asModel = false) {
     const relationHash = {};
 
-    if (this.debug) console.log(`${logNamespace} Relation Data ==>`, relationData);
+    if (this.debug) console.log(`${this.logNamespace} Relation Data ==>`, relationData);
 
     // Iterate all relation data, and build hash...
     if (relationData && Array.isArray(relationData) && relationData.length > 0) {
@@ -255,14 +283,14 @@ export default class JointNormalizer {
       } // end-for
     }
 
-    if (this.debug) console.log(`${logNamespace} Relation Hash ==>`, relationHash);
+    if (this.debug) console.log(`${this.logNamespace} Relation Hash ==>`, relationHash);
 
     return relationHash;
   } // END - buildRelationDataHash
 
   buildModelForItem(itemData) {
     const modelName = itemData[this.fieldForModelType];
-    if (this.debugToModel) console.log(`${logNamespace} Building "${modelName}" Model for data =>`, itemData);
+    if (this.debugToModel) console.log(`${this.logNamespace} Building "${modelName}" Model for data =>`, itemData);
 
     // If cannot resolve model name, just return original data...
     if (!modelName) return itemData;
@@ -274,7 +302,7 @@ export default class JointNormalizer {
 }
 /* eslint-enable class-methods-use-this */
 
-function buildModelFactory(models = {}, debug = false) {
+function buildModelFactory(models = {}, debug = false, logNamespace = '') {
   if (debug) console.log(`${logNamespace} Building Model factory with models =>`, models);
   return modelName => models[modelName];
 }
