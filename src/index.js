@@ -13,6 +13,7 @@ export default class JointNormalizer {
     this.fromFieldFormat = options.fromFieldFormat || 'snake'; // 'snake' | 'kebab' | 'camel'
     this.toFieldFormat = options.toFieldFormat || 'snake'; // 'snake' | 'kebab' | 'camel'
     this.fieldForModelType = options.fieldForModelType || 'type';
+    this.relationNameMap = options.relationNameMap || {};
     this.models = options.models || null;
     this.Model = buildModelFactory(this.models, this.debugInit, this.logNamespace);
   }
@@ -175,9 +176,8 @@ export default class JointNormalizer {
   } // END - normalizeRelationData
 
   normalizeRelationName(relationName) {
-    switch (relationName) {
-      default: return relationName;
-    }
+    const xform = this.relationNameMap[relationName];
+    return xform || relationName;
   } // END - normalizeRelationName
 
   // TODO: Apply field transformations !!!
