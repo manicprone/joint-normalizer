@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import Normalizer from '../../src';
-import payloads from '../scenarios/payloads/json-api';
+import payloadsCaseXform from '../scenarios/payloads/json-api-case-xforms';
+import payloadsFull from '../scenarios/payloads/json-api-full';
 
 const itemAsSnake = {
   type: 'token',
@@ -60,11 +61,11 @@ describe('NORMALIZE (json-api)', () => {
       });
 
       // snake to snake
-      const attrsSnake = snakeN.normalizeBaseAttributes(payloads.item_snake.data);
+      const attrsSnake = snakeN.normalizeBaseAttributes(payloadsCaseXform.item_snake.data);
       // kebab to kebab
-      const attrsKebab = kebabN.normalizeBaseAttributes(payloads.item_kebab.data);
+      const attrsKebab = kebabN.normalizeBaseAttributes(payloadsCaseXform.item_kebab.data);
       // camel to camel
-      const attrsCamel = camelN.normalizeBaseAttributes(payloads.item_camel.data);
+      const attrsCamel = camelN.normalizeBaseAttributes(payloadsCaseXform.item_camel.data);
 
       expect(attrsSnake).to.deep.equal(itemAsSnake);
       expect(attrsKebab).to.deep.equal(itemAsKebab);
@@ -88,13 +89,58 @@ describe('NORMALIZE (json-api)', () => {
         toFieldFormat: 'snake',
       });
 
-      const attrsKebabToSnake = kebabToSnakeN.normalizeBaseAttributes(payloads.item_kebab.data);
-      const attrsSnakeToCamel = snakeToCamelN.normalizeBaseAttributes(payloads.item_snake.data);
-      const attrsCamelToSnake = camelToSnakeN.normalizeBaseAttributes(payloads.item_camel.data);
+      const attrsKebabToSnake = kebabToSnakeN.normalizeBaseAttributes(payloadsCaseXform.item_kebab.data);
+      const attrsSnakeToCamel = snakeToCamelN.normalizeBaseAttributes(payloadsCaseXform.item_snake.data);
+      const attrsCamelToSnake = camelToSnakeN.normalizeBaseAttributes(payloadsCaseXform.item_camel.data);
 
       expect(attrsKebabToSnake).to.deep.equal(itemAsSnake);
       expect(attrsSnakeToCamel).to.deep.equal(itemAsCamel);
       expect(attrsCamelToSnake).to.deep.equal(itemAsSnake);
+    });
+  });
+
+  describe('normalizePayload', () => {
+    it('should normalize a base item payload', () => {
+      const normalizer = new Normalizer({
+        payloadSpec: 'json-api',
+      });
+
+      const normalized = normalizer.normalizePayload(payloadsFull.item_base);
+
+      expect(normalized).to.have.keys([
+        'type',
+        'id',
+        'name',
+        'url_alias',
+        'description',
+        'logo_url',
+        'org_type',
+        'created_at',
+        'updated_at',
+      ]);
+    });
+
+    it('should normalize an item payload with associations', () => {
+      const normalizer = new Normalizer({
+        payloadSpec: 'json-api',
+      });
+
+      const normalized = normalizer.normalizePayload(payloadsFull.item_with_one_assoc);
+
+      expect(normalized).to.have.keys([
+        'type',
+        'id',
+        'name',
+        'url_alias',
+        'description',
+        'logo_url',
+        'org_type',
+        'created_at',
+        'updated_at',
+        'groups',
+      ]);
+
+      // TODO - Add tests for the association data !!!
     });
   });
 

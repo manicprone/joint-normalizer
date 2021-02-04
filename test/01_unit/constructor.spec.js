@@ -3,7 +3,7 @@ import Normalizer from '../../src';
 import NormalizerDist from '../../dist/lib';
 import models from '../scenarios/models';
 
-describe('INSTANCE', () => {
+describe('CONSTRUCTOR', () => {
 
   describe('(from code)', () => {
     it('should instantiate the expected default instance', () => {
