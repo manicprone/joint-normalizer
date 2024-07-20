@@ -84,7 +84,7 @@ export default class JointNormalizer {
 
     if (this.debug) console.log(`${this.logNamespace} Normalizing item data ==>`, itemData);
 
-    // Populate relation data...
+    // Populate top-level relation data
     if (itemData.relationships) {
       const relations = itemData.relationships;
       Object.keys(relations).forEach((relationName) => {
@@ -147,10 +147,22 @@ export default class JointNormalizer {
       if (Array.isArray(relationRef.data)) {
         const relationArray = [];
         for (let i = 0; i < relationRef.data.length; i++) {
+          // Lookup hashed item
           const type = relationRef.data[i][this.fieldForModelType];
           const id = relationRef.data[i].id;
+          const hashedItem = relationData[type][id];
 
-          relationArray.push(relationData[type][id]);
+          // Handle nested relationships
+          if (hashedItem.relationships) {
+            const relations = hashedItem.relationships;
+            Object.keys(relations).forEach((nestedRelationName) => {
+              const nestedRelationRef = relations[nestedRelationName];
+              hashedItem[this.normalizeRelationName(nestedRelationName)] = this.normalizeRelationData(nestedRelationName, nestedRelationRef, relationData);
+            });
+            delete hashedItem.relationships;
+          }
+
+          relationArray.push(hashedItem);
         }
 
         switch (relationName) {
@@ -165,9 +177,20 @@ export default class JointNormalizer {
       } else {
         const type = relationRef.data[this.fieldForModelType];
         const id = relationRef.data.id;
+        const hashedItem = relationData[type][id];
+
+        // Handle nested relationships
+        if (hashedItem.relationships) {
+          const relations = hashedItem.relationships;
+          Object.keys(relations).forEach((nestedRelationName) => {
+            const nestedRelationRef = relations[nestedRelationName];
+            hashedItem[this.normalizeRelationName(nestedRelationName)] = this.normalizeRelationData(nestedRelationName, nestedRelationRef, relationData);
+          });
+          delete hashedItem.relationships;
+        }
 
         switch (relationName) {
-          default: normalized = relationData[type][id];
+          default: normalized = hashedItem;
         }
       }
     } // end-if (relationRef.data)
@@ -240,12 +263,11 @@ export default class JointNormalizer {
     return info;
   } // END - normalizeFilterData
 
-  // --------------------------------------------------
+  // ---------------------------------------------------------------------------
   // Manages all relation data in a hash.
-  // The relation data is normalized and then organized
-  // into a two-tiered object, so it can be efficiently
-  // retrieved when normalizing its base item.
-  // --------------------------------------------------
+  // The relation data is normalized and then organized into a two-tiered
+  // object, so it can be efficiently retrieved when normalizing its base item.
+  // ---------------------------------------------------------------------------
   // The relationHash is grouped by type, then by ID.
   // e.g.
   //
@@ -278,7 +300,9 @@ export default class JointNormalizer {
         // Populate hash with normalized item data...
         const typeHash = relationHash[relationItem[this.fieldForModelType]];
         if (!typeHash[relationItem.id]) {
-          typeHash[relationItem.id] = this.normalizeBaseAttributes(relationItem, asModel);
+          const entry = this.normalizeBaseAttributes(relationItem, asModel);
+          if (relationItem.relationships) entry.relationships = relationItem.relationships; // include nested relationships
+          typeHash[relationItem.id] = entry;
         }
       } // end-for
     }
