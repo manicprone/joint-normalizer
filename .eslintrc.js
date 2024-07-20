@@ -17,6 +17,7 @@ module.exports = {
     'dot-notation': 'off',
     'padded-blocks': 'off',
     'camelcase': 'off',
+    'comma-dangle': 'off',
     'no-param-reassign': 'off',
     'func-names': 'off',
   },

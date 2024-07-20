@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 import Normalizer from '../../src';
 import payloadsCaseXform from '../scenarios/payloads/json-api-case-xforms';
-import payloadsFull from '../scenarios/payloads/json-api-full';
+import payloadsCollection from '../scenarios/payloads/json-api-payloads-collection';
+import payloadsItem from '../scenarios/payloads/json-api-payloads-item';
 
 const itemAsSnake = {
   type: 'token',
@@ -105,7 +106,7 @@ describe('NORMALIZE (json-api)', () => {
         payloadSpec: 'json-api',
       });
 
-      const normalized = normalizer.normalizePayload(payloadsFull.item_base);
+      const normalized = normalizer.normalizePayload(payloadsItem.item_base);
 
       expect(normalized).to.have.keys([
         'type',
@@ -125,7 +126,7 @@ describe('NORMALIZE (json-api)', () => {
         payloadSpec: 'json-api',
       });
 
-      const normalized = normalizer.normalizePayload(payloadsFull.item_with_one_assoc);
+      const normalized = normalizer.normalizePayload(payloadsItem.item_with_one_assoc);
 
       expect(normalized).to.have.keys([
         'type',
@@ -140,7 +141,101 @@ describe('NORMALIZE (json-api)', () => {
         'groups',
       ]);
 
-      // TODO - Add tests for the association data !!!
+      expect(normalized.groups[0]).to.deep.equal({
+        type: payloadsItem.item_with_one_assoc.included[0].type,
+        id: payloadsItem.item_with_one_assoc.included[0].id,
+        ...payloadsItem.item_with_one_assoc.included[0].attributes
+      });
+    });
+
+    it('should normalize a collection payload with associations', () => {
+      const normalizer = new Normalizer({
+        payloadSpec: 'json-api'
+      });
+
+      const normalized = normalizer.normalizePayload(payloadsCollection.collection_with_one_assoc);
+
+      expect(normalized).to.have.keys([
+        'items',
+        'meta'
+      ]);
+
+      expect(normalized.meta).to.deep.equal({
+        total_items: 1
+      });
+
+      expect(normalized.items[0]).to.deep.equal({
+        type: payloadsCollection.collection_with_one_assoc.data[0].type,
+        id: payloadsCollection.collection_with_one_assoc.data[0].id,
+        ...payloadsCollection.collection_with_one_assoc.data[0].attributes,
+        groups: [
+          {
+            type: payloadsCollection.collection_with_one_assoc.included[0].type,
+            id: payloadsCollection.collection_with_one_assoc.included[0].id,
+            ...payloadsCollection.collection_with_one_assoc.included[0].attributes
+          },
+          {
+            type: payloadsCollection.collection_with_one_assoc.included[1].type,
+            id: payloadsCollection.collection_with_one_assoc.included[1].id,
+            ...payloadsCollection.collection_with_one_assoc.included[1].attributes
+          }
+        ]
+      });
+    });
+
+    it('should normalize a collection payload with nested associations', () => {
+      const normalizer = new Normalizer({
+        payloadSpec: 'json-api',
+        debug: false
+      });
+
+      const normalized = normalizer.normalizePayload(payloadsCollection.collection_with_nested_assoc);
+
+      expect(normalized).to.have.keys([
+        'items',
+        'meta'
+      ]);
+
+      expect(normalized.meta).to.deep.equal({
+        total_items: 2
+      });
+
+      // First item with associated_groups
+      expect(normalized.items[0]).to.deep.equal({
+        type: payloadsCollection.collection_with_nested_assoc.data[0].type,
+        id: payloadsCollection.collection_with_nested_assoc.data[0].id,
+        ...payloadsCollection.collection_with_nested_assoc.data[0].attributes,
+        associated_groups: [
+          {
+            type: payloadsCollection.collection_with_nested_assoc.included[2].type,
+            id: payloadsCollection.collection_with_nested_assoc.included[2].id,
+            ...payloadsCollection.collection_with_nested_assoc.included[2].attributes,
+            pickup_location: {
+              type: payloadsCollection.collection_with_nested_assoc.included[0].type,
+              id: payloadsCollection.collection_with_nested_assoc.included[0].id,
+              ...payloadsCollection.collection_with_nested_assoc.included[0].attributes
+            }
+          },
+          {
+            type: payloadsCollection.collection_with_nested_assoc.included[3].type,
+            id: payloadsCollection.collection_with_nested_assoc.included[3].id,
+            ...payloadsCollection.collection_with_nested_assoc.included[3].attributes,
+            pickup_location: {
+              type: payloadsCollection.collection_with_nested_assoc.included[1].type,
+              id: payloadsCollection.collection_with_nested_assoc.included[1].id,
+              ...payloadsCollection.collection_with_nested_assoc.included[1].attributes
+            }
+          }
+        ]
+      });
+
+      // Second item with no associated_groups
+      expect(normalized.items[1]).to.deep.equal({
+        type: payloadsCollection.collection_with_nested_assoc.data[1].type,
+        id: payloadsCollection.collection_with_nested_assoc.data[1].id,
+        ...payloadsCollection.collection_with_nested_assoc.data[1].attributes,
+        associated_groups: []
+      });
     });
   });
 
