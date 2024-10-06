@@ -161,7 +161,21 @@ describe('NORMALIZE (json-api)', () => {
       ]);
 
       expect(normalized.meta).to.deep.equal({
-        total_items: 1
+        total_items: 10,
+        skip: 0,
+        limit: 1,
+        curr_page: 1,
+        page_size: 1,
+        total_pages: 10,
+        prev: null,
+        next: {
+          skip: 1,
+          limit: 1,
+        },
+        extra_info: {
+          version: '2.0',
+          modules: ['a', 'b', 'z'],
+        }
       });
 
       expect(normalized.items[0]).to.deep.equal({
