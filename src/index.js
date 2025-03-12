@@ -150,10 +150,11 @@ export default class JointNormalizer {
           // Lookup hashed item
           const type = relationRef.data[i][this.fieldForModelType];
           const id = relationRef.data[i].id;
-          const hashedItem = relationData[type][id];
+          const hashedItem = objectUtils.get(relationData, [type, id]);
+
 
           // Handle nested relationships
-          if (hashedItem.relationships) {
+          if (hashedItem && hashedItem.relationships) {
             const relations = hashedItem.relationships;
             Object.keys(relations).forEach((nestedRelationName) => {
               const nestedRelationRef = relations[nestedRelationName];
@@ -162,7 +163,7 @@ export default class JointNormalizer {
             delete hashedItem.relationships;
           }
 
-          relationArray.push(hashedItem);
+          relationArray.push(hashedItem || relationRef.data[i]);
         }
 
         switch (relationName) {

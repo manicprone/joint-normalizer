@@ -251,6 +251,52 @@ describe('NORMALIZE (json-api)', () => {
         associated_groups: []
       });
     });
+
+    it('should not throw on missing included data but instead not hydrate the relation', () => {
+      const normalizer = new Normalizer({
+        payloadSpec: 'json-api',
+      });
+
+      const payload = {
+        data: {
+          type: 'Book',
+          id: 'book-001',
+          attributes: { name: 'The Great Gatsby' },
+          relationships: {
+            tags: {
+              data: [
+                { type: 'Tag', id: 'tag-001' },
+                { type: 'Tag', id: 'tag-002' },
+              ],
+            },
+          },
+        },
+        included: [
+          // Only include one of the two related tags
+          {
+            type: 'Tag',
+            id: 'tag-001',
+            attributes: { name: 'Fiction' },
+          },
+        ],
+      };
+
+      const normalized = normalizer.normalizePayload(payload);
+
+      expect(normalized).to.have.keys(['type', 'id', 'name', 'tags']);
+
+      // Should only hydrate the tag that was in the included section
+      expect(normalized.tags).to.have.lengthOf(2);
+      expect(normalized.tags[0]).to.deep.equal({
+        type: 'Tag',
+        id: 'tag-001',
+        name: 'Fiction',
+      });
+      expect(normalized.tags[1]).to.deep.equal({
+        type: 'Tag',
+        id: 'tag-002',
+      });
+    });
   });
 
 }); // END - NORMALIZE (json-api)
