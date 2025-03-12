@@ -1,6 +1,6 @@
 {
   "name": "joint-normalizer",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Normalization logic for Joint Kit payloads",
   "author": "|M| <manicprone@gmail.com>",
   "license": "MIT",
